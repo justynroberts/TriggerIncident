@@ -1,0 +1,107 @@
+body {
+    width: 350px;
+    min-height: 400px;
+    margin: 0;
+    padding: 15px;
+    font-family: Arial, sans-serif;
+    background: #1a1a2e;
+    color: white;
+    font-size: 14px;
+}
+
+.container {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.header {
+    text-align: center;
+    padding: 10px;
+    background: linear-gradient(135deg, #1a1a2e, #4d4d8c);
+    border-radius: 6px;
+}
+
+.header h2 {
+    margin: 0;
+    font-size: 18px;
+}
+
+.section {
+    background: #2a2a3e;
+    padding: 12px;
+    border-radius: 6px;
+    border: 1px solid #444;
+}
+
+label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: bold;
+}
+
+input[type="password"] {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #555;
+    border-radius: 4px;
+    background: #333;
+    color: white;
+    box-sizing: border-box;
+}
+
+input[type="checkbox"] {
+    margin-right: 8px;
+}
+
+.events {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.events label {
+    font-weight: normal;
+    cursor: pointer;
+    padding: 6px;
+    border-radius: 4px;
+    transition: background 0.2s;
+}
+
+.events label:hover {
+    background: #3a3a4e;
+}
+
+h3 {
+    margin: 0 0 10px 0;
+    font-size: 14px;
+}
+
+#triggerBtn {
+    width: 100%;
+    padding: 12px;
+    background: linear-gradient(135deg, #e94560, #c81d4e);
+    border: none;
+    border-radius: 6px;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background 0.2s;
+}
+
+#triggerBtn:hover:not(:disabled) {
+    background: linear-gradient(135deg, #ff5577, #e94560);
+}
+
+#triggerBtn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+#status {
+    text-align: center;
+    margin-bottom: 10px;
+    font-size: 12px;
+    color: #aaa;
+}

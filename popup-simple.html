@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>TriggerIncident</title>
+    <style>
+        body {
+            width: 400px;
+            min-height: 500px;
+            margin: 0;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            background: #1a1a2e;
+            color: white;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: linear-gradient(135deg, #1a1a2e, #4d4d8c);
+            border-radius: 8px;
+        }
+        .logo {
+            font-size: 18px;
+            font-weight: bold;
+        }
+        .config {
+            margin-bottom: 20px;
+        }
+        .input-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+        input[type="password"], input[type="text"], input[type="number"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #444;
+            border-radius: 4px;
+            background: #2a2a3e;
+            color: white;
+            box-sizing: border-box;
+        }
+        .delay-controls {
+            display: none;
+            margin-top: 10px;
+            padding: 10px;
+            background: #2a2a3e;
+            border-radius: 4px;
+        }
+        .delay-range {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .delay-range input {
+            width: 60px;
+        }
+        .tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-bottom: 15px;
+        }
+        .tab {
+            padding: 8px 12px;
+            background: #2a2a3e;
+            border: none;
+            border-radius: 4px;
+            color: white;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        .tab.active {
+            background: #7b68ee;
+        }
+        .events {
+            max-height: 200px;
+            overflow-y: auto;
+            margin-bottom: 15px;
+        }
+        .event-card {
+            background: #2a2a3e;
+            padding: 10px;
+            margin-bottom: 8px;
+            border-radius: 4px;
+            border: 1px solid #444;
+        }
+        .event-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+        .event-title {
+            font-weight: bold;
+            font-size: 14px;
+        }
+        .event-description {
+            font-size: 12px;
+            color: #aaa;
+        }
+        .trigger-btn {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #e94560, #c81d4e);
+            border: none;
+            border-radius: 4px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .trigger-btn:hover {
+            background: linear-gradient(135deg, #ff5577, #e94560);
+        }
+        .trigger-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        .selection-info {
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 12px;
+            color: #aaa;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo">⚡ TriggerIncident</div>
+    </div>
+
+    <div class="config">
+        <div class="input-group">
+            <label for="routingKey">PagerDuty Routing Key:</label>
+            <input type="password" id="routingKey" placeholder="Enter your routing key">
+        </div>
+        
+        <div class="input-group">
+            <label>
+                <input type="checkbox" id="enableDelay"> Add random delays between events
+            </label>
+            <div class="delay-controls" id="delayControls">
+                <div class="delay-range">
+                    <input type="number" id="minDelay" value="1" min="1" max="60">
+                    <span>to</span>
+                    <input type="number" id="maxDelay" value="5" min="1" max="60">
+                    <span>seconds</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="tabs">
+        <button class="tab active" data-category="AWS:Reinvent">♦️ AWS</button>
+        <button class="tab" data-category="Datadog">🐶 Datadog</button>
+        <button class="tab" data-category="New Relic">🔍 New Relic</button>
+        <button class="tab" data-category="Prometheus">🔥 Prometheus</button>
+    </div>
+
+    <div class="events" id="eventsContainer">
+        <!-- Events will be populated here -->
+    </div>
+
+    <div class="selection-info" id="selectionInfo">0 events selected</div>
+    
+    <button class="trigger-btn" id="triggerBtn" disabled>
+        🔥 Trigger Events
+    </button>
+
+    <script>
+        // Simple event data
+        const events = {
+            "AWS:Reinvent": [
+                { title: "DB Upgrade Failure", description: "Database upgrade failed with errors" },
+                { title: "Lambda Timeout", description: "AWS Lambda function timeout" }
+            ],
+            "Datadog": [
+                { title: "High CPU Usage", description: "CPU usage exceeds 90%" },
+                { title: "Memory Leak", description: "Memory usage steadily increasing" }
+            ],
+            "New Relic": [
+                { title: "Slow Transaction", description: "Transaction response time > 5s" },
+                { title: "Error Rate Spike", description: "Error rate increased by 200%" }
+            ],
+            "Prometheus": [
+                { title: "High Latency", description: "API latency exceeds SLA" },
+                { title: "Disk Space Low", description: "Disk usage above 85%" }
+            ]
+        };
+
+        let currentCategory = "AWS:Reinvent";
+
+        // DOM elements
+        const routingKeyInput = document.getElementById('routingKey');
+        const enableDelayCheckbox = document.getElementById('enableDelay');
+        const delayControls = document.getElementById('delayControls');
+        const eventsContainer = document.getElementById('eventsContainer');
+        const selectionInfo = document.getElementById('selectionInfo');
+        const triggerBtn = document.getElementById('triggerBtn');
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            setupEventListeners();
+            renderEvents();
+            updateSelectionCount();
+        });
+
+        function setupEventListeners() {
+            // Delay toggle
+            enableDelayCheckbox.addEventListener('change', () => {
+                delayControls.style.display = enableDelayCheckbox.checked ? 'block' : 'none';
+            });
+
+            // Routing key input
+            routingKeyInput.addEventListener('input', updateSelectionCount);
+
+            // Category tabs
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    currentCategory = tab.dataset.category;
+                    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    renderEvents();
+                    updateSelectionCount();
+                });
+            });
+
+            // Trigger button
+            triggerBtn.addEventListener('click', triggerEvents);
+        }
+
+        function renderEvents() {
+            eventsContainer.innerHTML = '';
+            const categoryEvents = events[currentCategory] || [];
+            
+            categoryEvents.forEach((event, index) => {
+                const card = document.createElement('div');
+                card.className = 'event-card';
+                card.innerHTML = `
+                    <div class="event-header">
+                        <div class="event-title">${event.title}</div>
+                        <input type="checkbox" class="event-checkbox" checked>
+                    </div>
+                    <div class="event-description">${event.description}</div>
+                `;
+                
+                const checkbox = card.querySelector('.event-checkbox');
+                checkbox.addEventListener('change', updateSelectionCount);
+                
+                eventsContainer.appendChild(card);
+            });
+        }
+
+        function updateSelectionCount() {
+            const selectedCount = document.querySelectorAll('.event-checkbox:checked').length;
+            selectionInfo.textContent = `${selectedCount} event${selectedCount !== 1 ? 's' : ''} selected`;
+            
+            const hasRoutingKey = routingKeyInput.value.trim().length > 0;
+            triggerBtn.disabled = selectedCount === 0 || !hasRoutingKey;
+        }
+
+        async function triggerEvents() {
+            const routingKey = routingKeyInput.value.trim();
+            if (!routingKey) {
+                alert('Please enter a routing key');
+                return;
+            }
+
+            const selectedCards = Array.from(document.querySelectorAll('.event-card'))
+                .filter(card => card.querySelector('.event-checkbox').checked);
+
+            if (selectedCards.length === 0) {
+                alert('Please select at least one event');
+                return;
+            }
+
+            triggerBtn.disabled = true;
+            triggerBtn.textContent = '🔄 Triggering...';
+
+            try {
+                for (let i = 0; i < selectedCards.length; i++) {
+                    const card = selectedCards[i];
+                    const title = card.querySelector('.event-title').textContent;
+                    
+                    // Create a simple payload
+                    const payload = {
+                        routing_key: routingKey,
+                        event_action: "trigger",
+                        payload: {
+                            summary: title,
+                            timestamp: new Date().toISOString(),
+                            severity: "critical",
+                            source: "TriggerIncident Extension",
+                            component: "Test",
+                            group: "testing",
+                            class: "test"
+                        }
+                    };
+
+                    try {
+                        const response = await fetch('https://events.pagerduty.com/v2/enqueue', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(payload)
+                        });
+
+                        if (!response.ok) {
+                            console.error(`Failed to trigger event: ${title}`);
+                        }
+                    } catch (error) {
+                        console.error(`Error triggering event: ${title}`, error);
+                    }
+
+                    // Add delay if enabled
+                    if (enableDelayCheckbox.checked && i < selectedCards.length - 1) {
+                        const minDelay = parseInt(document.getElementById('minDelay').value) || 1;
+                        const maxDelay = parseInt(document.getElementById('maxDelay').value) || 5;
+                        const delay = Math.floor(Math.random() * (maxDelay - minDelay + 1) + minDelay) * 1000;
+                        await new Promise(resolve => setTimeout(resolve, delay));
+                    }
+                }
+
+                alert(`Successfully triggered ${selectedCards.length} event(s)!`);
+            } catch (error) {
+                alert('An error occurred while triggering events');
+                console.error(error);
+            } finally {
+                triggerBtn.disabled = false;
+                triggerBtn.textContent = '🔥 Trigger Events';
+                updateSelectionCount();
+            }
+        }
+    </script>
+</body>
+</html>

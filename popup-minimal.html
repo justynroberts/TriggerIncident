@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>TriggerIncident</title>
+    <link rel="stylesheet" href="popup-minimal.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h2>⚡ TriggerIncident</h2>
+        </div>
+
+        <div class="section">
+            <label for="routingKey">PagerDuty Routing Key:</label>
+            <input type="password" id="routingKey" placeholder="Enter your routing key">
+        </div>
+
+        <div class="section">
+            <label>
+                <input type="checkbox" id="enableDelay"> Add random delays (1-5 seconds)
+            </label>
+        </div>
+
+        <div class="section">
+            <h3>Select Events to Trigger:</h3>
+            <div class="events">
+                <label><input type="checkbox" class="event-checkbox" data-title="Database Upgrade Failure"> Database Upgrade Failure</label>
+                <label><input type="checkbox" class="event-checkbox" data-title="Lambda Function Timeout"> Lambda Function Timeout</label>
+                <label><input type="checkbox" class="event-checkbox" data-title="High CPU Usage Alert"> High CPU Usage Alert</label>
+                <label><input type="checkbox" class="event-checkbox" data-title="Memory Leak Detection"> Memory Leak Detection</label>
+                <label><input type="checkbox" class="event-checkbox" data-title="API Latency Spike"> API Latency Spike</label>
+            </div>
+        </div>
+
+        <div class="section">
+            <div id="status">Select events and enter routing key to trigger</div>
+            <button id="triggerBtn" disabled>🔥 Trigger Events</button>
+        </div>
+    </div>
+
+    <script src="popup-minimal.js"></script>
+</body>
+</html>

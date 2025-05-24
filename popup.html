@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TriggerIncident</title>
+    <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+    <div class="extension-container">
+        <!-- Header -->
+        <div class="header">
+            <div class="logo">
+                <span class="logo-icon">⚡</span>
+                <span class="logo-text">TriggerIncident</span>
+            </div>
+            <div class="header-actions">
+                <button class="icon-btn" id="settingsBtn" title="Settings">
+                    <span>⚙️</span>
+                </button>
+                <button class="icon-btn" id="helpBtn" title="Help">
+                    <span>❓</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Configuration Section -->
+        <div class="config-section">
+            <div class="input-group">
+                <label for="routingKey">Routing Key</label>
+                <div class="input-with-toggle">
+                    <input type="password" id="routingKey" placeholder="Enter your PagerDuty routing key">
+                    <button class="toggle-btn" id="toggleRoutingKey">
+                        <span>👁️</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- New Random Delay Feature -->
+            <div class="input-group">
+                <label for="randomDelay">
+                    <input type="checkbox" id="enableRandomDelay">
+                    <span>Random delay between events</span>
+                </label>
+                <div class="delay-controls" id="delayControls" style="display: none;">
+                    <div class="delay-range">
+                        <input type="number" id="minDelay" placeholder="Min" min="1" max="60" value="1">
+                        <span>to</span>
+                        <input type="number" id="maxDelay" placeholder="Max" min="1" max="60" value="5">
+                        <span>seconds</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Category Tabs -->
+        <div class="category-tabs">
+            <div class="tab-scroll">
+                <button class="tab active" data-category="AWS:Reinvent">♦️ AWS</button>
+                <button class="tab" data-category="Datadog">🐶 Datadog</button>
+                <button class="tab" data-category="New Relic">🔍 New Relic</button>
+                <button class="tab" data-category="Prometheus">🔥 Prometheus</button>
+                <button class="tab" data-category="SolarWinds">☀️ SolarWinds</button>
+                <button class="tab" data-category="CrowdStrike">🦅 CrowdStrike</button>
+                <button class="tab" data-category="Customer Sentiment">😊 Sentiment</button>
+                <button class="tab" data-category="Alert Storm">🌐 Storm</button>
+            </div>
+        </div>
+
+        <!-- Events Container -->
+        <div class="events-container" id="eventsContainer">
+            <!-- Event cards will be populated here -->
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="action-section">
+            <div class="selection-info">
+                <span id="selectionCount">0 events selected</span>
+                <button class="link-btn" id="selectAllBtn">Select All</button>
+                <button class="link-btn" id="clearAllBtn">Clear All</button>
+            </div>
+            <button class="trigger-btn" id="triggerBtn">
+                <span>🔥</span>
+                <span>Trigger Events</span>
+                <div class="loading-spinner" id="loadingSpinner" style="display: none;"></div>
+            </button>
+        </div>
+
+        <!-- Progress Bar -->
+        <div class="progress-container" id="progressContainer" style="display: none;">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <div class="progress-text" id="progressText">0 / 0 events sent</div>
+        </div>
+    </div>
+
+    <!-- Modal for JSON Editing -->
+    <div class="modal-overlay" id="modalOverlay" style="display: none;">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Edit Event Payload</h3>
+                <button class="close-btn" id="closeModal">
+                    <span>✕</span>
+                </button>
+            </div>
+            <div class="modal-content">
+                <textarea id="jsonEditor" placeholder="JSON payload will appear here..."></textarea>
+            </div>
+            <div class="modal-footer">
+                <button class="btn secondary" id="resetJson">Reset</button>
+                <button class="btn primary" id="saveJson">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div class="modal-overlay" id="settingsModal" style="display: none;">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Settings</h3>
+                <button class="close-btn" id="closeSettings">
+                    <span>✕</span>
+                </button>
+            </div>
+            <div class="modal-content">
+                <div class="setting-group">
+                    <label>
+                        <input type="checkbox" id="autoSaveRouting">
+                        <span>Auto-save routing key</span>
+                    </label>
+                </div>
+                <div class="setting-group">
+                    <label>
+                        <input type="checkbox" id="showNotifications">
+                        <span>Show success notifications</span>
+                    </label>
+                </div>
+                <div class="setting-group">
+                    <label>
+                        <input type="checkbox" id="confirmBeforeTrigger">
+                        <span>Confirm before triggering events</span>
+                    </label>
+                </div>
+                <div class="setting-group">
+                    <label for="defaultCategory">Default category:</label>
+                    <select id="defaultCategory">
+                        <option value="AWS:Reinvent">AWS:Reinvent</option>
+                        <option value="Datadog">Datadog</option>
+                        <option value="New Relic">New Relic</option>
+                        <option value="Prometheus">Prometheus</option>
+                        <option value="SolarWinds">SolarWinds</option>
+                        <option value="CrowdStrike">CrowdStrike</option>
+                        <option value="Customer Sentiment">Customer Sentiment</option>
+                        <option value="Alert Storm">Alert Storm</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn secondary" id="resetSettings">Reset to Defaults</button>
+                <button class="btn primary" id="saveSettings">Save Settings</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Help Modal -->
+    <div class="modal-overlay" id="helpModal" style="display: none;">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Help & Instructions</h3>
+                <button class="close-btn" id="closeHelp">
+                    <span>✕</span>
+                </button>
+            </div>
+            <div class="modal-content">
+                <div class="help-section">
+                    <h4>Getting Started</h4>
+                    <ol>
+                        <li>Enter your PagerDuty routing key in the configuration section</li>
+                        <li>Select a category to view available event types</li>
+                        <li>Choose the events you want to trigger by checking the boxes</li>
+                        <li>Optionally enable random delays between events</li>
+                        <li>Click "Trigger Events" to send them to PagerDuty</li>
+                    </ol>
+                </div>
+                <div class="help-section">
+                    <h4>Features</h4>
+                    <ul>
+                        <li><strong>Random Delays:</strong> Add random delays between event triggers to simulate realistic scenarios</li>
+                        <li><strong>JSON Editing:</strong> Click the edit icon on any event to customize its payload</li>
+                        <li><strong>Bulk Operations:</strong> Select all or clear all events with one click</li>
+                        <li><strong>Progress Tracking:</strong> Monitor the progress of multiple event triggers</li>
+                        <li><strong>Auto-save:</strong> Your routing key and settings are automatically saved</li>
+                    </ul>
+                </div>
+                <div class="help-section">
+                    <h4>Categories</h4>
+                    <p>Each category contains pre-configured event templates for different monitoring tools and scenarios:</p>
+                    <ul>
+                        <li><strong>Alert Storm:</strong> All events from all categories</li>
+                        <li><strong>AWS:Reinvent:</strong> AWS-specific incidents</li>
+                        <li><strong>Datadog:</strong> Performance monitoring events</li>
+                        <li><strong>New Relic:</strong> Application performance events</li>
+                        <li><strong>Prometheus:</strong> Infrastructure monitoring events</li>
+                        <li><strong>SolarWinds:</strong> Network monitoring events</li>
+                        <li><strong>CrowdStrike:</strong> Security-related events</li>
+                        <li><strong>Customer Sentiment:</strong> Customer experience events</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script src="popup.js"></script>
+</body>
+</html>

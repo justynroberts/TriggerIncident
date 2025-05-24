@@ -1,0 +1,23 @@
+{
+  "manifest_version": 3,
+  "name": "TriggerIncident - PagerDuty Event Generator",
+  "version": "1.0.0",
+  "description": "Generate and trigger PagerDuty events with customizable payloads and timing controls",
+  "permissions": [
+    "storage",
+    "activeTab"
+  ],
+  "host_permissions": [
+    "https://events.pagerduty.com/*"
+  ],
+  "action": {
+    "default_popup": "popup-full.html",
+    "default_title": "TriggerIncident"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'"
+  }
+}

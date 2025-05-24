@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body {
+            width: 300px;
+            height: 400px;
+            margin: 0;
+            padding: 20px;
+            background: #2c3e50;
+            color: white;
+            font-family: Arial, sans-serif;
+        }
+        .header {
+            background: #3498db;
+            padding: 15px;
+            text-align: center;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            background: #34495e;
+            border: 1px solid #555;
+            color: white;
+            border-radius: 3px;
+            box-sizing: border-box;
+        }
+        button {
+            width: 100%;
+            padding: 15px;
+            background: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+        button:hover {
+            background: #c0392b;
+        }
+        .events {
+            margin: 20px 0;
+        }
+        .event {
+            margin: 10px 0;
+            padding: 10px;
+            background: #34495e;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h2>⚡ TriggerIncident Test</h2>
+    </div>
+    
+    <div>
+        <label>Routing Key:</label>
+        <input type="text" id="routingKey" placeholder="Enter PagerDuty routing key">
+    </div>
+    
+    <div class="events">
+        <div class="event">
+            <label>
+                <input type="checkbox" id="event1"> Database Error
+            </label>
+        </div>
+        <div class="event">
+            <label>
+                <input type="checkbox" id="event2"> Server Down
+            </label>
+        </div>
+        <div class="event">
+            <label>
+                <input type="checkbox" id="event3"> High CPU
+            </label>
+        </div>
+    </div>
+    
+    <button id="triggerBtn">🔥 Trigger Events</button>
+    
+    <div id="status" style="margin-top: 15px; text-align: center; font-size: 14px;">
+        Ready to trigger events
+    </div>
+
+    <script>
+        document.getElementById('triggerBtn').addEventListener('click', function() {
+            const routingKey = document.getElementById('routingKey').value;
+            const event1 = document.getElementById('event1').checked;
+            const event2 = document.getElementById('event2').checked;
+            const event3 = document.getElementById('event3').checked;
+            
+            if (!routingKey) {
+                alert('Please enter routing key');
+                return;
+            }
+            
+            if (!event1 && !event2 && !event3) {
+                alert('Please select at least one event');
+                return;
+            }
+            
+            document.getElementById('status').textContent = 'Triggering events...';
+            this.textContent = '⏳ Sending...';
+            this.disabled = true;
+            
+            // Simulate triggering
+            setTimeout(() => {
+                document.getElementById('status').textContent = 'Events triggered successfully!';
+                this.textContent = '🔥 Trigger Events';
+                this.disabled = false;
+                alert('Test successful! Events would be sent to PagerDuty.');
+            }, 2000);
+        });
+    </script>
+</body>
+</html>
