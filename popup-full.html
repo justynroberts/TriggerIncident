@@ -6,7 +6,7 @@
     <style>
         body {
             width: 400px;
-            min-height: 600px;
+            min-height: 800px;
             margin: 0;
             padding: 0;
             font-family: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
@@ -746,8 +746,8 @@
             <div class="input-group">
                 <label for="routingKey">Routing Key</label>
                 <div class="input-with-toggle">
-                    <input type="password" id="routingKey" placeholder="Enter your PagerDuty routing key">
-                    <button class="toggle-btn" id="toggleRoutingKey">
+                    <input type="password" id="routingKey" placeholder="Enter your PagerDuty routing key" title="Enter your PagerDuty integration routing key">
+                    <button class="toggle-btn" id="toggleRoutingKey" title="Toggle routing key visibility">
                         <span>👁️</span>
                     </button>
                 </div>
@@ -757,34 +757,41 @@
         <!-- Routing Key Status - Shown when key is set -->
         <div class="routing-key-status" id="routingKeyStatus" style="display: none;">
             <div class="status-info">
-                <span class="status-text">✅ Routing key configured</span>
-                <button class="link-btn" id="changeRoutingKey">Change</button>
+                <span class="status-text" title="PagerDuty routing key is configured and ready">✅ Routing key configured</span>
+                <button class="link-btn" id="changeRoutingKey" title="Click to change the routing key">Change</button>
             </div>
         </div>
 
-        <div class="input-group">
-            <label>
+    </div>
+
+    <!-- Trigger Button Section -->
+    <div class="trigger-section" style="padding: 16px; border-bottom: 1px solid #393939;">
+        <button class="trigger-btn" id="triggerBtn" title="Send selected events to PagerDuty">
+            <span>🔥</span>
+            <span>Trigger Events</span>
+            <div class="loading-spinner" id="loadingSpinner"></div>
+        </button>
+        
+        <!-- Selection Count Display -->
+        <div class="selection-display" style="margin-top: 12px; text-align: center;">
+            <span id="triggerSelectionCount" style="font-size: 14px; color: #c6c6c6; font-weight: 500;">0 alerts selected</span>
+        </div>
+        
+        <!-- Random Delay Controls -->
+        <div class="input-group" style="margin-top: 16px;">
+            <label title="Add random delays between event triggers to simulate realistic timing">
                 <input type="checkbox" id="enableRandomDelay">
                 <span>Random delay between events</span>
             </label>
             <div class="delay-controls" id="delayControls">
                 <div class="delay-range">
-                    <input type="number" id="minDelay" placeholder="Min" min="1" max="60" value="1">
+                    <input type="number" id="minDelay" placeholder="Min" min="1" max="60" value="1" title="Minimum delay in seconds">
                     <span>to</span>
-                    <input type="number" id="maxDelay" placeholder="Max" min="1" max="60" value="5">
+                    <input type="number" id="maxDelay" placeholder="Max" min="1" max="60" value="5" title="Maximum delay in seconds">
                     <span>seconds</span>
                 </div>
             </div>
         </div>
-    </div>
-
-    <!-- Trigger Button Section -->
-    <div class="trigger-section" style="padding: 16px; border-bottom: 1px solid #393939;">
-        <button class="trigger-btn" id="triggerBtn">
-            <span>🔥</span>
-            <span>Trigger Events</span>
-            <div class="loading-spinner" id="loadingSpinner"></div>
-        </button>
         
         <!-- Event Progress Indicator -->
         <div class="progress-container" id="progressContainer" style="margin-top: 16px;">
@@ -798,7 +805,7 @@
     <div class="category-section">
         <div class="category-header">
             <h3 style="margin: 0; font-size: 14px; font-weight: 600; color: #f4f4f4;">Select Event Category</h3>
-            <p style="margin: 4px 0 0 0; font-size: 12px; color: #c6c6c6;">Choose a monitoring tool category to view available events</p>
+            <p style="margin: 4px 0 0 0; font-size: 12px; color: #c6c6c6;">Select an alert category to trigger</p>
         </div>
         <div class="category-tabs">
             <div class="tab-scroll">
@@ -821,15 +828,15 @@
 
     <div class="action-section">
         <div class="selection-info">
-            <span id="selectionCount">0 events selected</span>
+            <span id="selectionCount" title="Number of events currently selected for triggering">0 events selected</span>
             <div>
-                <button class="link-btn" id="selectAllBtn">Select All</button>
-                <button class="link-btn" id="clearAllBtn">Clear All</button>
+                <button class="link-btn" id="selectAllBtn" title="Select all visible events">Select All</button>
+                <button class="link-btn" id="clearAllBtn" title="Deselect all events">Clear All</button>
             </div>
         </div>
         <div class="management-buttons" style="display: flex; gap: 8px;">
-            <button class="btn secondary" id="addCustomBtn" style="flex: 1;">➕ Add Custom</button>
-            <button class="btn secondary" id="managePayloadsBtn" style="flex: 1;">📁 Manage</button>
+            <button class="btn secondary" id="addCustomBtn" style="flex: 1;" title="Create a new custom event payload">➕ Add Custom</button>
+            <button class="btn secondary" id="managePayloadsBtn" style="flex: 1;" title="Import, export, or reset payload templates">📁 Manage</button>
         </div>
     </div>
 

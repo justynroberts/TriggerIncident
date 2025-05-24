@@ -15,6 +15,7 @@ const elements = {
     maxDelay: document.getElementById('maxDelay'),
     eventsContainer: document.getElementById('eventsContainer'),
     selectionCount: document.getElementById('selectionCount'),
+    triggerSelectionCount: document.getElementById('triggerSelectionCount'),
     selectAllBtn: document.getElementById('selectAllBtn'),
     clearAllBtn: document.getElementById('clearAllBtn'),
     addCustomBtn: document.getElementById('addCustomBtn'),
@@ -31,6 +32,7 @@ const elements = {
 // Initialize the extension
 document.addEventListener('DOMContentLoaded', async () => {
     await loadPayloads();
+    await loadSettings();
     setupEventListeners();
     renderEvents();
     updateSelectionCount();
@@ -74,6 +76,48 @@ async function savePayloads() {
     }
 }
 
+// Load settings from localStorage
+async function loadSettings() {
+    try {
+        // Load routing key
+        const routingKey = localStorage.getItem('triggerincident_routing_key');
+        if (routingKey) {
+            elements.routingKey.value = routingKey;
+        }
+
+        // Load random delay settings
+        const enableRandomDelay = localStorage.getItem('triggerincident_enable_random_delay');
+        if (enableRandomDelay === 'true') {
+            elements.enableRandomDelay.checked = true;
+            elements.delayControls.style.display = 'block';
+        }
+
+        const minDelay = localStorage.getItem('triggerincident_min_delay');
+        if (minDelay) {
+            elements.minDelay.value = minDelay;
+        }
+
+        const maxDelay = localStorage.getItem('triggerincident_max_delay');
+        if (maxDelay) {
+            elements.maxDelay.value = maxDelay;
+        }
+    } catch (error) {
+        console.error('Error loading settings:', error);
+    }
+}
+
+// Save settings to localStorage
+function saveSettings() {
+    try {
+        localStorage.setItem('triggerincident_routing_key', elements.routingKey.value);
+        localStorage.setItem('triggerincident_enable_random_delay', elements.enableRandomDelay.checked);
+        localStorage.setItem('triggerincident_min_delay', elements.minDelay.value);
+        localStorage.setItem('triggerincident_max_delay', elements.maxDelay.value);
+    } catch (error) {
+        console.error('Error saving settings:', error);
+    }
+}
+
 // Setup event listeners
 function setupEventListeners() {
     // Routing key toggle
@@ -87,6 +131,7 @@ function setupEventListeners() {
     elements.routingKey.addEventListener('input', () => {
         updateSelectionCount();
         checkRoutingKeyStatus();
+        saveSettings();
     });
 
     // Change routing key button
@@ -97,7 +142,12 @@ function setupEventListeners() {
     // Random delay toggle
     elements.enableRandomDelay.addEventListener('change', () => {
         elements.delayControls.style.display = elements.enableRandomDelay.checked ? 'block' : 'none';
+        saveSettings();
     });
+
+    // Delay range inputs
+    elements.minDelay.addEventListener('input', saveSettings);
+    elements.maxDelay.addEventListener('input', saveSettings);
 
     // Category tabs
     document.querySelectorAll('.tab').forEach(tab => {
@@ -199,11 +249,11 @@ function createEventCard(event, index) {
                 <span>${event.title}</span>
             </div>
             <div class="event-actions">
-                <input type="checkbox" class="event-checkbox" checked>
-                <button class="edit-btn" title="View payload">
+                <input type="checkbox" class="event-checkbox" checked title="Select this event for triggering">
+                <button class="edit-btn" title="View event payload (read-only)">
                     <span>👁️</span>
                 </button>
-                ${currentCategory === 'Custom' ? '<button class="delete-btn" title="Delete event"><span>🗑️</span></button>' : ''}
+                ${currentCategory === 'Custom' ? '<button class="delete-btn" title="Delete this custom event"><span>🗑️</span></button>' : ''}
             </div>
         </div>
         <div class="event-description">${event.description}</div>
@@ -279,8 +329,44 @@ function getCategoryIcon(category) {
 
 // Show payload in alert (view-only)
 function showPayloadAlert(event) {
+    showPayloadModal(event);
+}
+
+// Show payload in a modal instead of alert
+function showPayloadModal(event) {
     const payload = JSON.stringify(event.payload, null, 2);
-    alert(`📋 View Payload: "${event.title}"\n\n${payload.substring(0, 800)}${payload.length > 800 ? '...\n\n(Payload truncated for display)' : ''}`);
+    
+    // Create modal overlay
+    const modalOverlay = document.createElement('div');
+    modalOverlay.className = 'modal-overlay';
+    modalOverlay.style.display = 'flex';
+    
+    modalOverlay.innerHTML = `
+        <div class="modal" style="max-width: 600px; max-height: 80vh;">
+            <div class="modal-header">
+                <h3>📋 View Payload: "${event.title}"</h3>
+                <button class="close-btn" onclick="this.closest('.modal-overlay').remove()">
+                    <span>✕</span>
+                </button>
+            </div>
+            <div class="modal-content" style="max-height: 60vh; overflow-y: auto;">
+                <pre style="background: #393939; padding: 16px; border-radius: 4px; color: #f4f4f4; font-family: monospace; font-size: 12px; line-height: 1.4; white-space: pre-wrap; word-wrap: break-word;">${payload}</pre>
+            </div>
+            <div class="modal-footer">
+                <button class="btn secondary" onclick="navigator.clipboard.writeText('${payload.replace(/'/g, "\\'")}').then(() => showToast('📋 Payload copied to clipboard!', 'success', 3000))">📋 Copy</button>
+                <button class="btn primary" onclick="this.closest('.modal-overlay').remove()">Close</button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modalOverlay);
+    
+    // Close on overlay click
+    modalOverlay.addEventListener('click', (e) => {
+        if (e.target === modalOverlay) {
+            modalOverlay.remove();
+        }
+    });
 }
 
 // Update selection count
@@ -288,6 +374,11 @@ function updateSelectionCount() {
     const selectedEvents = document.querySelectorAll('.event-checkbox:checked');
     const count = selectedEvents.length;
     elements.selectionCount.textContent = `${count} event${count !== 1 ? 's' : ''} selected`;
+    
+    // Update trigger selection count (using "alerts" terminology)
+    if (elements.triggerSelectionCount) {
+        elements.triggerSelectionCount.textContent = `${count} alert${count !== 1 ? 's' : ''} selected`;
+    }
     
     elements.triggerBtn.disabled = count === 0 || !elements.routingKey.value.trim();
 }
@@ -342,7 +433,7 @@ async function saveCustomPayload() {
     const payloadText = document.getElementById('customPayload').value.trim();
 
     if (!title || !description || !payloadText) {
-        alert('Please fill in all fields');
+        showToast('⚠️ Please fill in all fields', 'error', 4000);
         return;
     }
 
@@ -369,9 +460,9 @@ async function saveCustomPayload() {
             renderEvents();
         }
         
-        alert('Custom event saved successfully!');
+        showToast('✅ Custom event saved successfully!', 'success', 4000);
     } catch (error) {
-        alert('Invalid JSON payload. Please check your syntax.');
+        showToast('❌ Invalid JSON payload. Please check your syntax.', 'error', 4000);
     }
 }
 
@@ -402,7 +493,7 @@ function exportPayloads() {
     link.download = `triggerincident-payloads-${new Date().toISOString().split('T')[0]}.json`;
     link.click();
     
-    alert('Payloads exported successfully!');
+    showToast('✅ Payloads exported successfully!', 'success', 4000);
 }
 
 function importPayloads() {
@@ -410,7 +501,7 @@ function importPayloads() {
     const file = fileInput.files[0];
     
     if (!file) {
-        alert('Please select a file to import');
+        showToast('⚠️ Please select a file to import', 'error', 4000);
         return;
     }
     
@@ -431,9 +522,9 @@ function importPayloads() {
             updateSelectionCount();
             closeImportExportModal();
             
-            alert('Payloads imported successfully!');
+            showToast('✅ Payloads imported successfully!', 'success', 4000);
         } catch (error) {
-            alert('Error importing file: ' + error.message);
+            showToast('❌ Error importing file: ' + error.message, 'error', 4000);
         }
     };
     
@@ -449,7 +540,7 @@ async function resetToDefaults() {
         updateSelectionCount();
         closeImportExportModal();
         
-        alert('Payloads reset to defaults successfully!');
+        showToast('✅ Payloads reset to defaults successfully!', 'success', 4000);
     }
 }
 
@@ -467,7 +558,7 @@ function getRandomDelay() {
 async function triggerEvents() {
     const routingKey = elements.routingKey.value.trim();
     if (!routingKey) {
-        alert('Please enter a routing key');
+        showToast('⚠️ Please enter a routing key', 'error', 4000);
         return;
     }
     
@@ -475,7 +566,7 @@ async function triggerEvents() {
         .filter(card => card.querySelector('.event-checkbox')?.checked);
     
     if (selectedCards.length === 0) {
-        alert('Please select at least one event to trigger');
+        showToast('⚠️ Please select at least one event to trigger', 'error', 4000);
         return;
     }
     
@@ -552,16 +643,16 @@ async function triggerEvents() {
             }
         }
         
-        // Show final results
+        // Show final results via toast (no more alert popups)
         if (successCount > 0) {
-            alert(`✅ Successfully triggered ${successCount} event${successCount !== 1 ? 's' : ''}!`);
+            showToast(`✅ Successfully triggered ${successCount} event${successCount !== 1 ? 's' : ''}!`, 'success', 5000);
         }
         if (errorCount > 0) {
-            alert(`❌ Failed to trigger ${errorCount} event${errorCount !== 1 ? 's' : ''}`);
+            showToast(`❌ Failed to trigger ${errorCount} event${errorCount !== 1 ? 's' : ''}`, 'error', 5000);
         }
         
     } catch (error) {
-        alert('An unexpected error occurred');
+        showToast('❌ An unexpected error occurred', 'error', 5000);
         console.error('Trigger error:', error);
     } finally {
         // Reset UI
